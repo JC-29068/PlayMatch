@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Filter, MapPin, Clock, Users, Plus, AlertCircle, Loader } from 'lucide-react';
+import { MapPin, Clock, Users, Plus, AlertCircle, Loader } from 'lucide-react';
 import { getMatches, createMatch } from '../lib/firestore';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,6 +10,8 @@ export default function Matches() {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [filter, setFilter] = useState<string>('All');
+  const filteredMatches = filter === 'All' ? matches : matches.filter(m => m.sport === filter || m.skillLevel === filter);
   const [form, setForm] = useState({
     title: '',
     sport: 'Football',
@@ -79,26 +81,31 @@ export default function Matches() {
       {activeTab === 'join' ? (
         <div className="flex-1 overflow-y-auto">
           <div className="flex gap-2 overflow-x-auto pb-4 hide-scrollbar mb-2">
-            <button className="flex items-center gap-1 bg-white border border-gray-200 px-3 py-1.5 rounded-full text-sm whitespace-nowrap shadow-sm">
-              <Filter size={14} /> Filters
-            </button>
-            <button className="bg-green-700 text-white px-3 py-1.5 rounded-full text-sm whitespace-nowrap shadow-sm">Football</button>
-            <button className="bg-white border border-gray-200 px-3 py-1.5 rounded-full text-sm whitespace-nowrap shadow-sm">Basketball</button>
-            <button className="bg-white border border-gray-200 px-3 py-1.5 rounded-full text-sm whitespace-nowrap shadow-sm">Intermediate</button>
+            {['All', 'Football', 'Basketball', 'Tennis', 'Cricket', 'Beginner', 'Intermediate', 'Advanced'].map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-full text-sm whitespace-nowrap shadow-sm transition ${
+                  filter === f ? 'bg-green-700 text-white' : 'bg-white border border-gray-200 text-gray-600'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
           </div>
 
           {loading ? (
             <div className="flex justify-center py-12">
               <Loader className="animate-spin text-green-700" size={32} />
             </div>
-          ) : matches.length === 0 ? (
+          ) : filteredMatches.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <p className="font-medium">No matches yet.</p>
-              <p className="text-sm">Create the first one!</p>
+              <p className="font-medium">No matches found.</p>
+              <p className="text-sm">Try a different filter or create one!</p>
             </div>
           ) : (
             <div className="space-y-4 pb-20">
-              {matches.map(match => (
+              {filteredMatches.map(match => (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={match.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-bold text-lg text-gray-900">{match.title}</h3>
